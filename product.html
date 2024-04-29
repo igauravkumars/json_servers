@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    #container{
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+        width:80%;
+        margin: auto;
+
+    }
+    #cards{
+        border: 1px solid black;
+        text-align: center;
+    }
+
+    #cards>img{
+        width:250px;
+        height:250px;
+    }
+</style>
+<body>
+    <h2>WElcome to product page</h2>
+    <div id="user">
+        <h4 id="name"></h4>
+        <button onclick="logOut()">LOGOUT USER</button>
+    </div>
+    <div id="container">
+
+    </div>
+
+    <script>
+        let container = document.getElementById("container")
+
+        let loginUser = JSON.parse(localStorage.getItem("userLogin"))
+        document.getElementById("name").textContent=`Welcome ${loginUser.name}`
+
+        async function getData(URL){
+          
+           let response = await fetch(URL)
+           let data = await response.json()
+           showData(data)
+        }
+        getData("http://localhost:3000/products")
+
+        function showData(arr){
+           container.innerHTML=""
+
+           arr.forEach((ele,i)=>{
+            let sepDiv = document.createElement("div")
+            sepDiv.id="cards"
+
+            let title = document.createElement("p")
+            title.innerText = `title:${ele.title}`
+
+            let price = document.createElement("p")
+            price.innerText=`Price:${ele.price}`
+
+            let image = document.createElement("img")
+            image.src=ele.src
+
+            let rating = document.createElement("p")
+            rating.innerText=`rating:${ele.ratings}`
+
+            let btn1 = document.createElement("button")
+            btn1.textContent="ADD TO CART"
+            btn1.addEventListener("click",()=>{
+                addFn(ele,i)
+            })
+
+            let btn2 = document.createElement("button")
+            btn2.textContent="DELETE"
+            btn2.addEventListener("click",()=>{
+                deleteFn(ele,i)
+            })
+
+            sepDiv.append(image,title,price,rating,btn1,btn2)
+
+            container.append(sepDiv)
+           })
+
+
+        }
+
+        function logOut(){
+            localStorage.removeItem("loginUser")
+            alert("logout successfully")
+            window.location.href="index.html"
+        }
+        async function addFn(ele,i){
+           
+            let response = await fetch("http://localhost:3000/allUsersCart")
+            let data = await response.json()
+            data[loginUser.name].push(ele)
+
+           fetch("http://localhost:3000/allUsersCart",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(data)
+           }).then(()=>{
+            console.log("added to cart")
+           }).catch((err)=>{
+             console.log("err")
+           })
+        }
+
+        async function deleteFn(ele,index){
+            let response = await fetch("http://localhost:3000/allUsersCart")
+            let data = await response.json()
+
+            data.splice(index,1)
+        }
+    </script>
+</body>
+</html>
